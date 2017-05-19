@@ -1,5 +1,5 @@
 # decision-tree
-A JVHW estimator based Decision Tree python implementation with validation, pruning, and attribute multi-splitting
+An optimal splitting criterion based Decision Tree python implementation with validation, pruning, and attribute multi-splitting. Here we compare 12 entropy and information gain splitting estimators. 
 Contributors: Banghua Zhu
 
 Note:
