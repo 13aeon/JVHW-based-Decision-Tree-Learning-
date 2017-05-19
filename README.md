@@ -3,8 +3,10 @@ A JVHW estimator based Decision Tree python implementation with validation, prun
 Contributors: Banghua Zhu
 
 Note:
-The original version of decision tree we rely on is from https://github.com/ryanmadden/decision-tree, the author: Ryan Madden and Ally Cody
 
++ The original version of decision tree we rely on is from https://github.com/ryanmadden/decision-tree, the author: Ryan Madden and Ally Cody
++ In our paper, we use the outcome from pre-prune results.
+ 
 ## Requirements
 
 python 2.7.6 [Download](https://www.python.org/download/releases/2.7.6/)
@@ -19,7 +21,7 @@ numpy, scipy and matlab module in python
 ## How to run
 decision-tree.py accepts parameters passed via the command line. The possible paramters are:
 * Filename for training (Required, must be the first argument after 'python decision-tree.py')
-* Estimator (-e) followed by the name of estimator to use (Required, the name should be either JVHW or MLE)
+* Estimator (-e) followed by the name of estimator to use (Required, the name should be one of JVHW, MLE, bcMLE, Valiant, Jackknifed, CAE, BUB, Dirichlet, Grassberger, Bayes, NSB or Shrinkage)
 * Method (-m) followed by the name of method to use (Required, the name could be C4.5, ID3 or CART)
 * Classifier name (Optional, by default the classifier is the last column of the dataset)
 * Datatype flag (-d) followed by datatype filename (Optional, defaults to 'datatypes.csv')

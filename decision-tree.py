@@ -35,7 +35,7 @@ class data():
 # function to read in data from the .csv files
 ##################################################
 def read_data(dataset, datafile, datatypes):
-    print ("Reading data...")
+    #print ("Reading data...")
     f = open(datafile)
     original_file = f.read()
     rowsplit_data = original_file.splitlines()
@@ -54,15 +54,17 @@ def read_data(dataset, datafile, datatypes):
 # Preprocess dataset
 ##################################################
 def preprocess2(dataset, existing_class_dict):
-    print ("Preprocessing data...")
+    #print ("Preprocessing data...")
     if existing_class_dict is None:
         class_values = [example[dataset.class_index] for example in dataset.examples]
         subset = np.sort(np.unique(class_values))
+        #print(subset)
         class_dict = {}
         for i in range(len(subset)):
             class_dict[subset[i]] = str(i)
     else:
         class_dict = existing_class_dict
+    #print(class_dict)
 
     for example in dataset.examples:
         if example[dataset.class_index] not in class_dict:
@@ -270,17 +272,42 @@ def calc_dataset_entropy(dataset, classifier):
         else:
             class_index = len(dataset.attributes) - 1
     #print(classifier, dataset.attributes)
+    #print([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
     if idorc == 2:
         if jvormle ==1:
             entro = eng.est_gini_MLE([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])],2.0)
+            #entro = entro[0]
         else:
             entro = eng.est_gini_JVHW([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])],2.0)
+            #entro = entro[0]
     else:
-        if jvormle == 1:
-            entro =  est_entro_MLE([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
-        else:
+        if jvormle == 0:
             entro = est_entro_JVHW([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
-        entro = entro[0]
+            entro = entro[0]
+        elif jvormle == 1:
+            entro = est_entro_MLE([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+            entro = entro[0]
+        elif jvormle == 2:
+            entro = eng.est_entro_MLE_biascorrection([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 3:
+            entro = eng.est_entro_valiant([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 4:
+            entro = eng.est_entro_jackknife([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 5:
+            entro = eng.est_entro_CAE([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 6:
+            entro = eng.est_entro_BUB([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 7:
+            entro = eng.est_entro_Dirichlet([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 8:
+            entro = eng.est_entro_Grass([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 9:
+            entro = eng.est_entro_bayes([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 10:
+            entro = eng.est_entro_NSB([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+        elif jvormle == 11:
+            entro = eng.est_entro_shrinkage([float(elements) for elements in list(np.array(dataset.examples)[:,class_index])])
+
     return entro
 
 ##################################################
@@ -642,19 +669,19 @@ def main():
             datatypes = 'datatypes.csv'
         read_data(dataset, datafile, datatypes)
         classifier = dataset.attributes[-1]
+        eng = matlab.engine.start_matlab()
         if ("-a" in args):
             arg3 = args[args.index("-a") + 1]
             if (arg3 in dataset.attributes):
                 classifier = arg3
         if ("-m" in args):
-            methods = args[args.index("-m") + 1]
+            methods = args[args.index("-m") + 1]            
             if methods == "C4.5":
                 idorc = 1
             elif methods == "ID3":
                 idorc = 0
             elif methods == "CART":
                 idorc = 2
-                eng = matlab.engine.start_matlab()
             else:
                 print("Methods must be one of the following: C4.5, ID3 or CART.")
                 exit(-1)
@@ -664,8 +691,28 @@ def main():
                 jvormle = 0
             elif estimators == "MLE":
                 jvormle = 1
+            elif estimators == 'bcMLE':
+                jvormle = 2
+            elif estimators == 'Valiant':
+                jvormle = 3
+            elif estimators == 'Jackknifed':
+                jvormle = 4
+            elif estimators == 'CAE':
+                jvormle = 5
+            elif estimators == 'BUB':
+                jvormle = 6
+            elif estimators == 'Dirichlet':
+                jvormle = 7
+            elif estimators == 'Grassberger':
+                jvormle = 8
+            elif estimators == 'Bayes':
+                jvormle = 9
+            elif estimators == 'NSB':
+                jvormle = 10
+            elif estimators == 'Shrinkage':
+                jvormle = 11
             else:
-                print("Estimators must be one of the following: JVHW, MLE.")
+                print("Estimators must be one of the following: JVHW, MLE, bcMLE, Valiant, Jackknifed, CAE, BUB, Dirichlet, Grassberger, Bayes, NSB, Shrinkage")
                 exit(-1)
         dataset.classifier = classifier
 
@@ -676,18 +723,17 @@ def main():
                 break
             else:
                 dataset.class_index = range(len(dataset.attributes))[-1]
-                
         unprocessed = copy.deepcopy(dataset)
         class_dict = preprocess2(dataset, None)
 
-        print ("Computing tree...")
+        #print ("Computing tree...")
         root = compute_tree(dataset, None, classifier) 
         if ("-s" in args):
             print_disjunctive(root, dataset, "")
             print ("\n")
         if ("-v" in args):
             datavalidate = args[args.index("-v") + 1]
-            print ("Validating tree...")
+            #print ("Validating tree...")
 
             validateset = data(classifier)
             read_data(validateset, datavalidate, datatypes)
